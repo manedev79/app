@@ -22,6 +22,8 @@ import { PreferencesController } from '@/Controllers/PreferencesController'
 import { SyncStatusController } from '@/Controllers/SyncStatusController'
 import { AccountMenuPane } from '@/Components/AccountMenu/AccountMenuPane'
 
+import { ItemListController } from '@/Controllers/ItemList/ItemListController'
+
 import { EventObserverInterface } from './EventObserverInterface'
 
 export const JoinWorkspaceSuccessString = () =>
@@ -40,6 +42,7 @@ export class ApplicationEventObserver implements EventObserverInterface {
     private subscriptionManager: SubscriptionManagerInterface,
     private toastService: ToastServiceInterface,
     private userService: UserServiceInterface,
+    private itemListController: ItemListController,
   ) {}
 
   async handle(event: ApplicationEvent): Promise<void> {
@@ -64,6 +67,13 @@ export class ApplicationEventObserver implements EventObserverInterface {
 
               this.preferencesController.openPreferences()
               this.preferencesController.setCurrentPane(route.settingsParams.panel)
+              break
+            }
+            case RouteType.Note: {
+              const { uuid } = route.noteParams
+              if (uuid) {
+                await this.itemListController.openNote(uuid)
+              }
               break
             }
             case RouteType.AcceptSubscriptionInvite: {

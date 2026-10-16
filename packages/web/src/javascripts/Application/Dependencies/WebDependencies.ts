@@ -432,6 +432,7 @@ export class WebDependencies extends DependencyContainer {
         application.subscriptions,
         this.get<ToastService>(Web_TYPES.ToastService),
         application.user,
+        this.get<ItemListController>(Web_TYPES.ItemListController),
       )
     })
   }

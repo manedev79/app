@@ -2,6 +2,7 @@ import { UserRequestType } from '@standardnotes/common'
 import { PreferencePaneId } from '@standardnotes/services'
 import { AppViewRouteParam, ValidAppViewRoutes } from './Params/AppViewRouteParams'
 import { DemoParams } from './Params/DemoParams'
+import { NoteParams } from './Params/NoteParams'
 import { OnboardingParams } from './Params/OnboardingParams'
 import { PurchaseParams } from './Params/PurchaseParams'
 import { SettingsParams } from './Params/SettingsParams'
@@ -79,6 +80,14 @@ export class RouteParser implements RouteParserInterface {
     }
   }
 
+  get noteParams(): NoteParams {
+    this.checkForProperRouteType(RouteType.Note)
+
+    return {
+      uuid: this.searchParams.get(RootQueryParam.Note) as string,
+    }
+  }
+
   get appViewRouteParam(): AppViewRouteParam | undefined {
     this.checkForProperRouteType(RouteType.AppViewRoute)
 
@@ -119,6 +128,7 @@ export class RouteParser implements RouteParserInterface {
       [RootQueryParam.AcceptSubscriptionInvite, RouteType.AcceptSubscriptionInvite],
       [RootQueryParam.UserRequest, RouteType.UserRequest],
       [RootQueryParam.AppViewRoute, RouteType.AppViewRoute],
+      [RootQueryParam.Note, RouteType.Note],
     ])
 
     for (const rootQueryParam of rootQueryParametersMap.keys()) {

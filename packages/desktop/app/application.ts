@@ -6,6 +6,7 @@ import { StoreKeys } from './javascripts/Main/Store/StoreKeys'
 import { AppName, initializeStrings } from './javascripts/Main/Strings'
 import { isLinux, isMac, isWindows } from './javascripts/Main/Types/Platforms'
 import { isDev } from './javascripts/Main/Utils/Utils'
+import { parseNoteDeepLink, urlWithNote } from './javascripts/Main/DeepLink'
 import { createWindowState } from './javascripts/Main/Window'
 
 const deepLinkScheme = 'standardnotes'
@@ -16,6 +17,10 @@ export function initializeApplication(args: { app: Electron.App; ipcMain: Electr
   app.name = AppName
 
   const state = new AppState(app)
+
+  if (!isMac()) {
+    state.deepLinkUrl = process.argv.find((arg) => arg.startsWith(`${deepLinkScheme}://`))
+  }
 
   void setupDeepLinking(app)
 
@@ -53,12 +58,13 @@ function focusWindow(appState: AppState) {
 
 function registerSingleInstanceHandler(app: Electron.App, appState: AppState) {
   app.on('second-instance', (_event: Event, argv: string[], _workingDirectory: string, _additionalData: unknown) => {
-    if (isWindows()) {
-      appState.deepLinkUrl = argv.find((arg) => arg.startsWith(deepLinkScheme))
+    if (isWindows() || isLinux()) {
+      appState.deepLinkUrl = argv.find((arg) => arg.startsWith(`${deepLinkScheme}://`))
     }
 
     /* Someone tried to run a second instance, we should focus our window. */
     focusWindow(appState)
+    openDeepLink(appState)
   })
 }
 
@@ -91,6 +97,7 @@ function registerAppEventListeners(args: {
   app.on('open-url', (_event, url) => {
     state.deepLinkUrl = url
     focusWindow(state)
+    openDeepLink(state)
   })
 
   app.on('ready', () => {
@@ -143,5 +150,21 @@ async function finishApplicationInitialization({ app, shell, state }: { app: App
     state.windowState.trayManager.createTrayIcon()
   }
 
-  void windowState.window.loadURL(state.startUrl)
+  const noteUuid = parseNoteDeepLink(state.deepLinkUrl, deepLinkScheme)
+  state.deepLinkUrl = undefined
+
+  void windowState.window.loadURL(noteUuid ? urlWithNote(state.startUrl, noteUuid) : state.startUrl)
+}
+
+function openDeepLink(state: AppState) {
+  const window = state.windowState?.window
+  const noteUuid = parseNoteDeepLink(state.deepLinkUrl, deepLinkScheme)
+
+  /* If the window does not exist yet, the link is handled once it is created */
+  if (!window || !noteUuid) {
+    return
+  }
+
+  state.deepLinkUrl = undefined
+  void window.loadURL(urlWithNote(state.startUrl, noteUuid))
 }

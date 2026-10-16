@@ -6,6 +6,7 @@ import {
   CHANGE_EDITOR_WIDTH_COMMAND,
   OPEN_NOTE_HISTORY_COMMAND,
   PIN_NOTE_COMMAND,
+  RootQueryParam,
   SHOW_HIDDEN_OPTIONS_KEYBOARD_COMMAND,
   STAR_NOTE_COMMAND,
 } from '@standardnotes/ui-services'
@@ -32,6 +33,7 @@ import { MutuallyExclusiveMediaQueryBreakpoints } from '@/Hooks/useMediaQuery'
 import AddToVaultMenuOption from '../Vaults/AddToVaultMenuOption'
 import MenuSection from '../Menu/MenuSection'
 import { shareBlobOnMobile } from '@/NativeMobileWeb/ShareBlobOnMobile'
+import { copyTextToClipboard } from '@/Utils/copyTextToClipboard'
 import { c } from 'ttag'
 
 const iconSize = MenuItemIconSize
@@ -98,6 +100,21 @@ const NotesOptions = ({ notes, closeMenu }: NotesOptionsProps) => {
     await notesController.duplicateSelectedNotes()
     closeMenuAndToggleNotesList()
   }, [closeMenuAndToggleNotesList, notesController])
+
+  const copyNoteLink = useCallback(() => {
+    const note = notes[0]
+    if (!note) {
+      return
+    }
+
+    const url = new URL(window.location.href)
+    url.search = ''
+    url.hash = ''
+    url.searchParams.set(RootQueryParam.Note, note.uuid)
+
+    copyTextToClipboard(url.toString())
+    closeMenu()
+  }, [closeMenu, notes])
 
   const openRevisionHistoryModal = useCallback(() => {
     application.historyModalController.openModal(notesController.firstSelectedNote)
@@ -274,6 +291,12 @@ const NotesOptions = ({ notes, closeMenu }: NotesOptionsProps) => {
           <MenuItem onClick={shareSelectedItems}>
             <Icon type="share" className={iconClass} />
             {c('B4.Notes.EditorOptions.Action').t`Share`}
+          </MenuItem>
+        )}
+        {notes.length === 1 && (
+          <MenuItem onClick={copyNoteLink}>
+            <Icon type="link" className={iconClass} />
+            {c('B3.Notes.NoteActions.Action').t`Copy link to note`}
           </MenuItem>
         )}
         <MenuItem onClick={duplicateSelectedNotes} disabled={areSomeNotesInReadonlySharedVault}>

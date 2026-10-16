@@ -10,6 +10,7 @@ import {
   ToastServiceInterface,
 } from '@standardnotes/ui-services'
 import { ToastType } from '@standardnotes/toast'
+import { ItemListController } from '@/Controllers/ItemList/ItemListController'
 import {
   ApplicationEvent,
   SessionsClientInterface,
@@ -42,6 +43,7 @@ describe('ApplicationEventObserver', () => {
   let subscriptionManager: SubscriptionManagerInterface
   let toastService: ToastServiceInterface
   let userService: UserServiceInterface
+  let itemListController: jest.Mocked<ItemListController>
 
   const createObserver = () =>
     new ApplicationEventObserver(
@@ -56,6 +58,7 @@ describe('ApplicationEventObserver', () => {
       subscriptionManager,
       toastService,
       userService,
+      itemListController,
     )
 
   beforeEach(() => {
@@ -97,6 +100,8 @@ describe('ApplicationEventObserver', () => {
 
     userService = {} as jest.Mocked<UserServiceInterface>
     userService.submitUserRequest = jest.fn().mockReturnValue(true)
+
+    itemListController = { openNote: jest.fn() } as unknown as jest.Mocked<ItemListController>
   })
 
   describe('Upon Application Launched', () => {
@@ -119,6 +124,17 @@ describe('ApplicationEventObserver', () => {
       await createObserver().handle(ApplicationEvent.Launched)
 
       expect(purchaseFlowController.openPurchaseFlow).not.toHaveBeenCalled()
+    })
+
+    it('should open the note referenced by the note route', async () => {
+      routeService.getRoute = jest.fn().mockReturnValue({
+        type: RouteType.Note,
+        noteParams: { uuid: 'note-uuid' },
+      } as jest.Mocked<RouteParserInterface>)
+
+      await createObserver().handle(ApplicationEvent.Launched)
+
+      expect(itemListController.openNote).toHaveBeenCalledWith('note-uuid')
     })
 
     it('should open up settings if user is logged in', async () => {

@@ -6,5 +6,6 @@ export enum RouteType {
   UserRequest = 'user-request',
   Demo = 'demo',
   AppViewRoute = 'route',
+  Note = 'note',
   None = 'none',
 }
