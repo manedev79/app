@@ -73,4 +73,12 @@ describe('route parser', () => {
     expect(parser.type).toEqual(RouteType.UserRequest)
     expect(parser.userRequestParams.requestType).toEqual(UserRequestType.ExitDiscount)
   })
+
+  it('routes to a note', () => {
+    const url = 'https://app.standardnotes.com/?note=0e2c9b63-8d6e-4a67-a7f3-6f1c2b7d9a10'
+    const parser = new RouteParser(url)
+
+    expect(parser.type).toEqual(RouteType.Note)
+    expect(parser.noteParams).toEqual({ uuid: '0e2c9b63-8d6e-4a67-a7f3-6f1c2b7d9a10' })
+  })
 })
